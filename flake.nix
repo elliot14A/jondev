@@ -17,7 +17,9 @@
              air
              sqlite
              sqlite-interactive
-             bun
+             bun 
+             sqlc 
+             go-migrate
            ];
            shellHook = ''
              echo "jondev - Build protifolios with ease";
