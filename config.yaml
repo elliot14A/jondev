@@ -1,0 +1,3 @@
+hash:
+  file_path: .secure_key
+  key: secure-hash-key

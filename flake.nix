@@ -16,7 +16,7 @@
              go 
              air
              sqlite
-             sqlite-interactive
+             litecli
              bun 
              sqlc 
              go-migrate

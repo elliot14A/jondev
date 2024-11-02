@@ -1,4 +1,4 @@
-DB_PATH=./sqlite/jondev.db
+DB_PATH=.jondev/sqlite/jondev.db
 MIGRATIONS_PATH=./migrations
 BUILD_DIR=build
 BINARY_NAME=jondev-server
