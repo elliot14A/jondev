@@ -11,6 +11,7 @@
   packages = with pkgs; [
     air
     litecli
+    sqlite
     sqlc
     go-migrate
     protobuf
@@ -45,6 +46,8 @@
     build-web.exec = "cd web-dashboard && bun run build";
 
     build.exec = "build-server && build-web";
+
+    generate-hash.exec = "go run main.go generate-hash";
 
     install.exec = ''
       cd web-dashboard && bun install
@@ -115,7 +118,7 @@
     echo "Available tools:"
     echo "  * Bun $(bun --version)"
     echo "  * Go $(go version)"
-    echo "  * SQLite $(sqlite --version)"
+    echo "  * SQLite $(sqlite3 --version)"
     echo "Development commands:"
     echo "  * devenv up        - Start development servers"
     echo "  * build - Build the project"

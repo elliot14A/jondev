@@ -1,0 +1,22 @@
+// proto/hash/v1/hash.proto
+syntax = "proto3";
+
+package hash.v1;
+
+option go_package = "github.com/elliot14A/jondev/gen/v1/hash;hash_v1";
+
+// HashService provides hash verification functionality
+service HashService {
+  // VerifyHash verifies if the provided input matches the stored hash
+  rpc VerifyHash(VerifyHashRequest) returns (VerifyHashResponse) {}
+}
+
+// VerifyHashRequest contains the input to be verified
+message VerifyHashRequest {
+  string input = 1;
+}
+
+// VerifyHashResponse indicates whether the hash verification was successful
+message VerifyHashResponse {
+  bool matches = 1;
+}

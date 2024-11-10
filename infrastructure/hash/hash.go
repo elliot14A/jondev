@@ -5,12 +5,11 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
-	"github.com/elliot14A/jondev/application/repositories"
 	"github.com/elliot14A/jondev/domain/models"
 )
 
@@ -19,13 +18,13 @@ type FileHashRepository struct {
 	key      []byte
 }
 
-func NewHashRepository(filePath string, key []byte) repositories.HashRepository {
-	return &FileHashRepository{filePath: filePath, key: key}
+func NewHashRepository(filePath string, rawKey string) *FileHashRepository {
+	key := sha256.Sum256([]byte(rawKey))
+	return &FileHashRepository{filePath: filePath, key: key[:]}
 }
 
 func (f *FileHashRepository) Store(ctx context.Context, hash models.Hash) error {
-	// Create data string
-	data := []byte(fmt.Sprintf("%s\n%s", hash.Value, hash.Salt))
+	data := []byte(hash.Value)
 
 	// Create cipher block
 	block, err := aes.NewCipher(f.key)
@@ -79,12 +78,13 @@ func (f *FileHashRepository) Read(ctx context.Context) (models.Hash, error) {
 	}
 
 	// Verify ciphertext length
-	if len(ciphertext) < gcm.NonceSize() {
+	nonceSize := gcm.NonceSize()
+	if len(ciphertext) < nonceSize {
 		return models.Hash{}, fmt.Errorf("ciphertext too short")
 	}
 
-	// Extract nonce
-	nonce, encryptedData := ciphertext[:gcm.NonceSize()], ciphertext[gcm.NonceSize():]
+	// Extract nonce and encrypted data
+	nonce, encryptedData := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	// Decrypt data
 	plaintext, err := gcm.Open(nil, nonce, encryptedData, nil)
@@ -92,12 +92,9 @@ func (f *FileHashRepository) Read(ctx context.Context) (models.Hash, error) {
 		return models.Hash{}, fmt.Errorf("failed to decrypt: %v", err)
 	}
 
-	// Parse data
-	parts := strings.Split(string(plaintext), "\n")
-	if len(parts) != 2 {
-		return models.Hash{}, fmt.Errorf("invalid data format")
-	}
+	// Parse data using the same separator as Store
 
-	return models.Hash{Value: parts[0], Salt: parts[1]}, nil
+	return models.Hash{
+		Value: string(plaintext),
+	}, nil
 }
-

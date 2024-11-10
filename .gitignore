@@ -41,3 +41,14 @@ next-env.d.ts
 /sqlite
 .secure_key
 /.jondev
+*.lock
+.envrc
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml

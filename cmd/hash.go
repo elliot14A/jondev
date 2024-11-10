@@ -1,17 +1,14 @@
-// Update file: cmd/hash.go
-
 package cmd
 
 import (
 	"context"
-	"crypto/sha256"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/elliot14A/jondev/application/service"
+	"github.com/elliot14A/jondev/application/services"
 	"github.com/elliot14A/jondev/domain/pkg"
 	"github.com/elliot14A/jondev/infrastructure/hash"
 	"github.com/elliot14A/jondev/infrastructure/sqlite/actions/hash_status"
@@ -39,24 +36,19 @@ func generateHash() error {
 		return fmt.Errorf("❌ Error loading config: %v", err)
 	}
 
-	// Ensure key is exactly 32 bytes (256 bits) for AES-256
-	key := sha256.Sum256([]byte(config.Hash.Key))
-
 	// Ensure directory exists
 	dir := filepath.Dir(config.Hash.FilePath)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("❌ Failed to create directory: %v", err)
 	}
 
-	hashRepository := hash.NewHashRepository(config.Hash.FilePath, key[:])
-
+	hashRepository := hash.NewHashRepository(config.Hash.FilePath, config.Hash.Key)
 	db, err := sql.Open("sqlite3", "./.jondev/sqlite/jondev.db")
 	if err != nil {
 		return fmt.Errorf("❌ Failed to open database: %v", err)
 	}
-
 	hashStatusRepo := hash_status.NewHashStatusRepository(db)
-	hashSvc := service.NewHashService(hashRepository, hashStatusRepo)
+	hashSvc := services.NewHashService(hashRepository, hashStatusRepo)
 
 	hashStatus, err := hashSvc.GetStatus(context.Background())
 	if err != nil {
@@ -69,32 +61,18 @@ func generateHash() error {
 
 	fmt.Println("🔄 Generating new hash for you...")
 
-	// Generate and store hash
-	hash, err := hashSvc.GenerateHash(context.Background(), "secure hash")
+	// Generate and store h
+	h, err := hashSvc.GenerateHash(context.Background(), config.Hash.Key)
 	if err != nil {
 		return fmt.Errorf("❌ Error generating hash: %v", err)
 	}
 
-	fmt.Println("✨ Hash generated successfully...")
+	fmt.Printf("✨ Hash generated successfully: %s\n", h.Value)
 
-	if err := hashSvc.StoreHash(context.Background(), hash); err != nil {
+	if err := hashSvc.StoreHash(context.Background(), h); err != nil {
 		return fmt.Errorf("❌ Failed to store hash: %v", err)
 	}
-
 	fmt.Println("💾 Hash successfully saved to file...")
-
-	// Verify storage
-	storedHash, err := hashSvc.ReadHash(context.Background())
-	if err != nil {
-		return fmt.Errorf("❌ Error reading stored hash: %v", err)
-	}
-
-	if storedHash.Value != hash.Value || storedHash.Salt != hash.Salt {
-		os.Remove(config.Hash.FilePath)
-		return fmt.Errorf("❌ Hash verification failed: stored hash doesn't match generated hash")
-	}
-
-	fmt.Println("✅ Hash verified successfully...")
 
 	// Mark as generated in database
 	if err := hashStatusRepo.MarkHashAsGenerated(context.Background()); err != nil {

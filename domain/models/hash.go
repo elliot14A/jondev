@@ -9,7 +9,6 @@ import (
 
 type Hash struct {
 	Value string
-	Salt  string
 }
 
 type HashStatus struct {

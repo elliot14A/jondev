@@ -12,6 +12,10 @@ type Config struct {
 		FilePath string `mapstructure:"file_path"`
 		Key      string `mapstructure:"key"`
 	} `mapstructure:"hash"`
+	Server struct {
+		Host string `mapstructure:"host"`
+		Port string `mapstructure:"port"`
+	} `mapstructure:"server"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -39,4 +43,8 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+func (c *Config) GetServerAddr() string {
+	return fmt.Sprintf("%s:%s", c.Server.Host, c.Server.Port)
 }

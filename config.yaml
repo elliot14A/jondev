@@ -1,3 +1,6 @@
 hash:
-  file_path: .secure_key
-  key: secure-hash-key
+  file_path: ./.jondev/.secure_key
+  key: "YourSuperSecretKey12345678901234"
+server:
+  port: 8000
+  host: 0.0.0.0
