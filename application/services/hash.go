@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
 
 	"github.com/elliot14A/jondev/application/repositories"
 	"github.com/elliot14A/jondev/domain/models"
@@ -33,11 +32,7 @@ func (s *HashService) GenerateHash(ctx context.Context, input string) (models.Ha
 	hash := pbkdf2.Key([]byte(input), salt, 480000, 32, sha256.New)
 
 	// Encode both salt and hash to base64 for storage
-	saltStr := base64.StdEncoding.EncodeToString(salt)
 	hashStr := base64.StdEncoding.EncodeToString(hash)
-
-	fmt.Printf("Debug - Generate:\nRaw Salt Length: %d\nRaw Hash Length: %d\nEncoded Salt: %s\nEncoded Hash: %s\n",
-		len(salt), len(hash), saltStr, hashStr)
 
 	return models.Hash{
 		Value: hashStr,

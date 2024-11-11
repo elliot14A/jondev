@@ -11,13 +11,18 @@ import (
 	"github.com/elliot14A/jondev/application/services"
 	"github.com/elliot14A/jondev/domain/pkg"
 	"github.com/elliot14A/jondev/infrastructure/hash"
+	"github.com/elliot14A/jondev/infrastructure/logger"
 	"github.com/elliot14A/jondev/infrastructure/sqlite/actions/hash_status"
+	"github.com/elliot14A/jondev/interfaces/grpc/interceptors"
 	pb "github.com/elliot14A/jondev/proto/gen/v1/hash"
-	"google.golang.org/grpc"
 )
+
+const serviceName = "jondev"
 
 func RunGrpcServer(config pkg.Config) error {
 	serverAddr := config.GetServerAddr()
+
+	logger := logger.GetLogger()
 
 	// Ensure directory exists
 	dir := filepath.Dir(config.Hash.FilePath)
@@ -33,8 +38,9 @@ func RunGrpcServer(config pkg.Config) error {
 	hashStatusRepo := hash_status.NewHashStatusRepository(db)
 	hashSvc := services.NewHashService(hashRepository, hashStatusRepo)
 
-	grpcServer := grpc.NewServer()
-	hashServer := NewHashServer(hashSvc)
+	grpcServer := interceptors.SetupGRPCServerWithLogging(logger)
+
+	hashServer := NewHashServer(hashSvc, logger)
 
 	pb.RegisterHashServiceServer(grpcServer, hashServer)
 

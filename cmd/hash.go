@@ -11,6 +11,7 @@ import (
 	"github.com/elliot14A/jondev/application/services"
 	"github.com/elliot14A/jondev/domain/pkg"
 	"github.com/elliot14A/jondev/infrastructure/hash"
+	"github.com/elliot14A/jondev/infrastructure/logger"
 	"github.com/elliot14A/jondev/infrastructure/sqlite/actions/hash_status"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
@@ -36,6 +37,8 @@ func generateHash() error {
 		return fmt.Errorf("❌ Error loading config: %v", err)
 	}
 
+	logger := logger.GetLogger()
+
 	// Ensure directory exists
 	dir := filepath.Dir(config.Hash.FilePath)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -59,7 +62,7 @@ func generateHash() error {
 		return fmt.Errorf("⚠️  Hash already exists. To regenerate, you must first manually clear both the database and the hash file")
 	}
 
-	fmt.Println("🔄 Generating new hash for you...")
+	logger.Info("🔄 Generating new hash for you...")
 
 	// Generate and store h
 	h, err := hashSvc.GenerateHash(context.Background(), config.Hash.Key)
@@ -72,7 +75,7 @@ func generateHash() error {
 	if err := hashSvc.StoreHash(context.Background(), h); err != nil {
 		return fmt.Errorf("❌ Failed to store hash: %v", err)
 	}
-	fmt.Println("💾 Hash successfully saved to file...")
+	logger.Info("💾 Hash successfully saved to file...")
 
 	// Mark as generated in database
 	if err := hashStatusRepo.MarkHashAsGenerated(context.Background()); err != nil {
@@ -82,10 +85,10 @@ func generateHash() error {
 
 	// Update last verified timestamp
 	if err := hashStatusRepo.UpdateLastVerified(context.Background()); err != nil {
-		log.Printf("⚠️  Warning: Failed to update last verified timestamp: %v", err)
+		logger.Warn("⚠️  Warning: Failed to update last verified timestamp: %v", err)
 	}
 
-	fmt.Println("\n🎉 Successfully generated and stored hash!")
-	fmt.Println("🔒 Your jondev instance is now secured")
+	logger.Info("\n🎉 Successfully generated and stored hash!")
+	logger.Info("🔒 Your jondev instance is now secured")
 	return nil
 }
