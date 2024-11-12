@@ -39,6 +39,9 @@
 
   # Scripts/Commands
   scripts = {
+    dev-server.exec = "air serve";
+    dev-web.exec = "cd web-dashboard && bun run dev";
+
     clean.exec = "rm -rf $BUILD_DIR && mkdir -p $BUILD_DIR";
 
     build-server.exec = "go build -o $BUILD_DIR/$BINARY_NAME main.go";
